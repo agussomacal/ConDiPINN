@@ -1,0 +1,17 @@
+tensorflow==1.13.1
+keras
+numpy
+scipy
+matplotlib
+dill
+joblib
+pandas
+seaborn
+pathos
+pytest
+tqdm
+pynverse
+
+# connect environment to ipynb kernel
+# pip install ipykernel
+# python -m ipykernel install --user --name=pinn
