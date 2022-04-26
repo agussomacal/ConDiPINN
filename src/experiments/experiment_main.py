@@ -17,7 +17,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from pathos.multiprocessing import Pool, cpu_count
+from multiprocessing import Pool, cpu_count
 
 from experiments.utils import robin_exact_solution, get_prediction_domain
 from lib.utils import Bounds, NamedPartial
