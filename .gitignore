@@ -1,0 +1,20 @@
+Data
+Results
+
+# Ignore caches
+*__pycache__*
+*.vscode
+*.idea
+
+*.aux
+*.dvi
+*.log
+*.pdf
+*.synctex.gz
+*.bbl
+*.blg
+*.ipynb_checkpoints
+*.out
+
+# Ignore virtual environment
+venv
