@@ -38,6 +38,13 @@ Install libraries
 ```
 pip install -r requirements.txt 
 ```
+Add the repository scripts path to the environment python path so it can call and import them correctly. For that, once the environment is created create a file with extension **.pth** in the virtual environment directory **env/lib/python3.6/site-packages/**, for example create the file **env/lib/python3.6/site-packages/path2self_packages.pth** and write in it two lines that tell python which are the paths to the project and the src folder, ex:
+
+```
+/home/user/Repositories/condipinn
+/home/user/Repositories/condipinn/src
+```
+
 # Run experiments
 
 ### From shell

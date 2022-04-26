@@ -15,6 +15,7 @@ Results
 *.blg
 *.ipynb_checkpoints
 *.out
+*.pyc
 
 # Ignore virtual environment
 venv
