@@ -3,6 +3,10 @@
 This repository has all the code implementation of the project for the proceedings of the CEMRACS 2021: 
 [Deep Learning-based Schemes for Singularly Perturbed Convection-Diffusion Problems](https://github.com/agussomacal/ConDiPINN)
 
+To run the code on binder without setting up locally any environment go to [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/agussomacal/ConDiPINN/055ffc652285cafdc8ae35bf5cc5fe020e238cdf) and search for the notebook in src/notebooks/ProceedingsExperiments.ipynb.
+
+Only experiments with 10, 100, and 1000 points for training are shown to avoid large memory files. 
+
 ### Abstract
 
 The experiments that can be found in this repository show different ways of approximating a 1 dimensional convection-diffusion equation 
