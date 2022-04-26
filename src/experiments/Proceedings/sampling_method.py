@@ -25,8 +25,7 @@ n_train = [100]
 sampler = ["linspace", "uniform"]
 float_precision = [32]
 do_computations(data_experiment_name, model_names, epsilons2try, repetitions, n_train, sampler, float_precision, k=k,
-                alpha=alpha, calculate=True, recalculate=False, number_of_cores=number_of_cores, test_factor=10,
-                r_weight_proportion=0.5)
+                alpha=alpha, recalculate=False, number_of_cores=number_of_cores, test_factor=10, r_weight_proportion=0.5)
 df, predictions, true_solutions = collect_data(data_experiment_name, k=k, alpha=alpha, sampler=sampler,
                                                float_precision=float_precision, n_train=n_train)
 

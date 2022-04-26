@@ -15,25 +15,23 @@ from functools import partial
 from pathlib import Path
 from typing import Callable, List
 
-from src.config import results_path
-from experiments.BaseExperiment import BaseExperiment
-from lib.IntelligentModels.NNFlow import NNFlow
-
 import matplotlib.pyplot as plt
 import numpy as np
-from numpy.random import normal
 import tensorflow as tf
+from numpy.random import normal
 
-from experiments.utils import plot_predictions, Potencial, g, n
+from experiments.BaseExperiment import BaseExperiment
 from experiments.Models.parameters import EPSILON, alpha, k, potential, n_train_r, \
     r_weight_proportion, num_repetitions, \
-    exact_solution_function_cv, domain_to_predict_cv, x_bounds_cv
-
+    domain_to_predict, x_bounds, exact_solution_function
+from experiments.utils import plot_predictions, Potencial, g, n
 from lib.DifferentialEquations.DifferentialEquation import Condition, DifferentialEquation
-from lib.IntelligentModels.BaseModelFlow import BaseModelFlow
-from lib.PINN_models.PinnFlow import PinnFlow
 from lib.DifferentialEquations.Operators import D, Operator
+from lib.IntelligentModels.BaseModelFlow import BaseModelFlow
+from lib.IntelligentModels.NNFlow import NNFlow
+from lib.PINN_models.PinnFlow import PinnFlow
 from lib.utils import Bounds
+from src.config import results_path
 
 
 class RescalingVariationalOperator(Operator):
@@ -93,6 +91,7 @@ class RescalingVariationalPinn(BaseExperiment):
                    intelligent_model: Callable[[], BaseModelFlow], sampler=np.random.uniform, **kwargs) -> List[
         np.ndarray]:
 
+        x_bounds = Bounds(lower=x_bounds.lower / EPSILON, upper=x_bounds.upper / EPSILON)
         # --------- core experiment --------- #
         for i in range(n_samplings):
             weight_proportion = {
@@ -180,8 +179,9 @@ class RescalingVariationalPinn(BaseExperiment):
 
             # --------- processing data to save experiment --------- #
             num_per_dim2pred = len(coords2predict)
-            u_predictions = pinn.predict(domain=coords2predict, which="u").reshape((num_per_dim2pred)) * np.exp(
-                self.potential.eval([coords2predict * self.epsilon]) / 2 / self.epsilon).reshape((num_per_dim2pred))
+            u_predictions = pinn.predict(domain=coords2predict / self.epsilon, which="u").reshape(
+                (num_per_dim2pred)) * self.epsilon * np.exp(
+                self.potential.eval([coords2predict]) / 2 / self.epsilon).reshape((num_per_dim2pred))
 
             pinn.free_tf_session()
             del pinn
@@ -206,14 +206,14 @@ if __name__ == "__main__":
             max_samplings=1,
             n_iters_per_sampling=1000000000,
             loss_metric="id",
-            coords2predict=domain_to_predict_cv,
-            x_bounds=x_bounds_cv,
-            intelligent_model=lambda: NNFlow(hidden_layers=(10, 10),
+            coords2predict=domain_to_predict,
+            x_bounds=x_bounds,
+            intelligent_model=lambda: NNFlow(hidden_layers=(10, 10), random_seed=0,
                                              limit_zero=False),  # True = NN*x(1-x)
         )
 
-        plot_predictions(ax, coords2predict=domain_to_predict_cv,
-                         exact_solution_function=exact_solution_function_cv,
+        plot_predictions(ax, coords2predict=domain_to_predict,
+                         exact_solution_function=exact_solution_function,
                          u_predictions_best=u_predictions[-1],
                          alpha=0.5 + 0.5 / num_repetitions)
     title = "epsilon=" + format(ve.epsilon) + ",iteration=" + format(len(u_predictions)) + ",lambda" + format(

@@ -22,7 +22,7 @@ def fig_save_context(fig_path: str, figsize=(8, 6)):
     fig, ax = plt.subplots(figsize=figsize)
     yield ax
     plt.savefig(fig_path)
-    plt.show()
+    # plt.show()
     plt.close()
 
 

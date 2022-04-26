@@ -14,15 +14,14 @@ import subprocess
 from collections import defaultdict
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
 from pathos.multiprocessing import Pool, cpu_count
 
-from experiments.utils import robin_exact_solution, get_prediction_domain, fig_save_context
+from experiments.utils import robin_exact_solution, get_prediction_domain
 from lib.utils import Bounds, NamedPartial
-from src.config import results_path, experiments_path, data_path
+from src.config import experiments_path, data_path
 
 # os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
@@ -31,7 +30,7 @@ from src.config import results_path, experiments_path, data_path
 # ------------------------------------------------------ #
 
 L2 = "l2 error"
-H1 = "H1 error"
+H1 = "h1 error"
 
 CBLIND_BLUE = sns.color_palette("colorblind")[0]
 CBLIND_ORANGE = sns.color_palette("colorblind")[1]
@@ -86,49 +85,40 @@ def get_data_path(experiment_name):
 
 
 def do_computations(experiment_name, model_names, epsilons2try, repetitions, n_train, samplers, float_precisions, k,
-                    alpha, calculate=True, recalculate=False, number_of_cores=5, test_factor=10,
-                    r_weight_proportion=0.5):
+                    alpha, recalculate=False, number_of_cores=5, test_factor=10, r_weight_proportion=0.5):
     # https://alexandra-zaharia.github.io/posts/run-python-script-as-subprocess-with-multiprocessing/
     experiment_data_path = get_data_path(experiment_name)
     number_of_cores = min((number_of_cores, cpu_count() - 1))
 
     # parallelize computations
-    if calculate:
-        def filter_func(args):
-            filename = "{}/{}_{}_{}_{}_{}_{}.pickle".format(experiment_data_path, *args)
-            return (not os.path.exists(filename)) or (os.path.getsize(filename) == 0)
+    def filter_func(*args):
+        filename = "{}/{}_{}_{}_{}_{}_{}.pickle".format(experiment_data_path, *args[0])
+        return (not os.path.exists(filename)) or (os.path.getsize(filename) == 0)
 
-        # ----------------------- parallelize ----------------------- #
-        def par_func(args):
-            return subprocess.call(
-                ["python",
-                 "experiment_parallel_sequential.py",
-                 ] + [str(experiment_data_path)] + list(map(str, args)) + [str(k), str(alpha), str(r_weight_proportion),
-                                                                           str(test_factor)],
-                shell=False,
-            )
+    parameters2calculate = list(
+        itertools.product(model_names, epsilons2try, repetitions, n_train, samplers, float_precisions))
 
-        parameters2calculate = list(
-            itertools.product(model_names, epsilons2try, repetitions, n_train, samplers, float_precisions))
+    if not recalculate:  # filter already done experiments.
+        parameters2calculate = list(filter(filter_func, parameters2calculate))
+    print("\n\n\n\n\n\n", "All the calculations are: ", len(parameters2calculate), "\n\n\n\n\n\n")
 
-        if not recalculate:  # filter already done experiments.
-            parameters2calculate = list(filter(filter_func, parameters2calculate))
-        # progress_bar = tqdm(total=len(parameters2calculate))
-        print("\n\n\n\n\n\n", "All the calculations are: ", len(parameters2calculate), "\n\n\n\n\n\n")
+    # ----------------------- parallelize ----------------------- #
+    def par_func(args):
+        return subprocess.call(
+            ["python",
+             "experiment_parallel_sequential.py",
+             ] + [str(experiment_data_path)] + list(map(str, args)) + [str(k), str(alpha), str(r_weight_proportion),
+                                                                       str(test_factor)],
+            shell=False,
+        )
 
-        # def update_progress_bar(_):
-        #     progress_bar.update()
-
-        map_func = Pool(number_of_cores).map if number_of_cores > 1 else map
-        os.chdir(experiments_path)  # put path in experiments folder
-        for res in map_func(par_func, parameters2calculate):
-            pass
-        # for params in parameters2calculate:
-        #     p.apply_async(par_func, (params,), callback=update_progress_bar)
-        # print(params)
+    map_func = Pool(number_of_cores).map if number_of_cores > 1 else map
+    os.chdir(experiments_path)  # put path in experiments folder
+    for res in map_func(par_func, parameters2calculate):
+        pass
 
 
-def collect_data(experiment_name, k, alpha, **kwargs):
+def group_pickle_data_in_csv_format(experiment_name):
     experiment_data_path = get_data_path(experiment_name)
 
     # ----------------------- Collect data ----------------------- #
@@ -136,26 +126,37 @@ def collect_data(experiment_name, k, alpha, **kwargs):
     predictions = defaultdict(dict)
     i = 0
     for filename in os.listdir(experiment_data_path):
-        try:
-            with open("{}/{}".format(experiment_data_path, filename), "rb") as f:
-                results_i = pickle.load(f)
-            metadata = filename[:-7].split("_")
-            ntr = int(metadata[3])
-            predictions[ntr][i] = results_i["pred"]
-            i += 1
-            results_dict["time"].append(results_i["t"])
-            results_dict["model_name"].append(names4paper_dict[metadata[0]])
-            results_dict["epsilon"].append(float(metadata[1]))
-            results_dict["repetition"].append(int(metadata[2]))
-            results_dict["n_train"].append(ntr)
-            results_dict["sampler"].append(metadata[4])
-            results_dict["float_precision"].append(int(metadata[5]))
-        except (FileNotFoundError, FileExistsError):
-            print("File open problem: {}.".format(filename))
+        if "pickle" in filename:
+            try:
+                filepath = "{}/{}".format(experiment_data_path, filename)
+                with open(filepath, "rb") as f:
+                    results_i = pickle.load(f)
+                metadata = filename[:-7].split("_")
+                ntr = int(metadata[3])
+                predictions[ntr][i] = results_i["pred"]
+                i += 1
+                results_dict["time"].append(results_i["t"])
+                results_dict["model_name"].append(names4paper_dict[metadata[0]])
+                results_dict["epsilon"].append(float(metadata[1]))
+                results_dict["repetition"].append(int(metadata[2]))
+                results_dict["n_train"].append(ntr)
+                results_dict["sampler"].append(metadata[4])
+                results_dict["float_precision"].append(int(metadata[5]))
+            except (FileNotFoundError, FileExistsError):
+                print("File open problem: {}.".format(filename))
+
     predictions = {ntr: pd.DataFrame.from_dict(preds) for ntr, preds in predictions.items()}
-
     df = pd.DataFrame.from_dict(results_dict)
+    df.to_csv("{}/results.csv".format(experiment_data_path))
 
+    return df, predictions
+
+
+def collect_data(experiment_name, k, alpha, **kwargs):
+    # ------------- Collect data ------------- #
+    df, predictions = group_pickle_data_in_csv_format(experiment_name)
+
+    # ------------- Filter data -------------- #
     # filter for experiment specific variables
     for key, val in kwargs.items():
         df = df[df[key].isin(val)]
@@ -163,7 +164,7 @@ def collect_data(experiment_name, k, alpha, **kwargs):
         predictions[ntr] = predictions[ntr].loc[:, predictions[ntr].columns.isin(sub_df.index)].T.sort_index()
         predictions[ntr] = predictions[ntr].values  # to numpy array
 
-    # calculate errors
+    # ----------- Calculate errors ----------- #
     exact_solution_function = NamedPartial(robin_exact_solution, k=k, alpha=alpha)
     true_solutions = dict()
     df[L2] = 0
@@ -211,22 +212,13 @@ def error_plots_flexible(df, ax, error_name, label_var, x_var, stat_var=None, co
                          aggfunc=np.mean, **kwargs):
     for label, data, color_dict in data_filter(df, label_var, color_dict, **kwargs):
         error = pd.pivot_table(data, index=x_var, columns=stat_var, values=error_name, aggfunc=aggfunc).sort_index()
-        perc_25 = np.quantile(error, q=0.25, axis=1)
-        error_mean = np.quantile(error, q=0.5, axis=1)
-        perc_75 = np.quantile(error, q=0.75, axis=1)
         error_min = np.min(error, axis=1)
-        ax.plot(error.index, error_mean, marker=".", linestyle='--',
-                label="{}: {} ".format(label_var, label) + r" $\pm25\%$",
-                c=color_dict[label])
-        ax.fill_between(error.index, perc_25, perc_75, color=color_dict[label],
-                        alpha=0.1)
-        ax.plot(error.index, error_min, marker="o", linestyle='-', c=color_dict[label])
+        ax.plot(error.index, error_min, marker="o", linestyle='-', c=color_dict[label], label=label)
 
     ax.set_xlabel(x_var)
     ax.set_ylabel(r"$\ell_2$ error") if error_name == L2 else ax.set_ylabel(error_name)
     ax.legend()
-    ax.set_title(
-        "PINN models error behaviour\n" + " ".join(["{}={}".format(name, val) for name, val in kwargs.items()]))
+    ax.set_title("Models behaviour on {}\n".format(x_var))
     if xlog:
         ax.set_xscale("log")
         eps2tick = np.unique(
@@ -239,32 +231,28 @@ def error_plots_flexible(df, ax, error_name, label_var, x_var, stat_var=None, co
     if ylog:
         ax.set_yscale("log")
         ax.set_ylim((0, 1))
-    # plt.tight_layout()
 
 
 # prediction plots
-def prediction_plot(df, predictions, true_solutions, ax, error_name, n_train, float_precision, sampler, epsilon,
-                    test_factor):
+def prediction_plot(df, predictions, true_solutions, ax, error_name, n_train, float_precision, sampler, epsilon):
     df_metadata2plot = df[df.n_train == n_train].reset_index(drop=True)
     df_metadata2plot = df_metadata2plot.loc[
                        (df_metadata2plot.n_train == n_train) & (df_metadata2plot.float_precision == float_precision) & (
                                df_metadata2plot.sampler == sampler) & (df_metadata2plot.epsilon == epsilon), :]
     df_metadata2plot = df_metadata2plot.groupby("model_name").apply(lambda x: x.index[np.argmin(x[error_name])])
 
-    x2pred = get_prediction_domain([Bounds(0, 1)], num_per_dim2pred=n_train * test_factor)
     true_sol = np.ravel(true_solutions[n_train][np.where(np.sort(np.unique(df.epsilon)) == epsilon)[0]])
+    x2pred = get_prediction_domain([Bounds(0, 1)], num_per_dim2pred=len(true_sol))
     ax.plot(x2pred, true_sol, label="True solution", c="teal", linestyle="-", linewidth=4, alpha=0.7)
-    ax.set_ylim((np.min(true_sol), np.max(true_sol)))
+    d = np.max(true_sol) - np.min(true_sol)
+    ax.set_ylim((np.min(true_sol) - d * 0.1, np.max(true_sol) + d * 0.1))
     for ix, model_name in zip(df_metadata2plot.values, df_metadata2plot.index):
         ax.plot(x2pred, predictions[n_train][ix].T, label=model_name,
                 c=models_color_dict[model_name],
                 linestyle="-.", alpha=0.8, linewidth=2)
 
     ax.legend()
-    ax.set_title(r"PINN models prediction"  # for $\epsilon$=" + str(epsilon) #+ "\n" +
-                 # "alpha=" + str(alpha) + " k=" + str(k) + " n train=" + str(n_train) + "\n" +
-                 # "precision=float" + str(float_precision) + " sampler=" + str(sampler)
-                 )
+    ax.set_title(r"Models prediction")
     ax.set_xlabel("x")
     ax.set_ylabel("u")
 
@@ -280,4 +268,3 @@ def time_plots(df, ax, error_name=L2, **kwargs):
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.set_ylim((0, 1))
-    # plt.tight_layout()
