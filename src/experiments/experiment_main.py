@@ -13,6 +13,7 @@ import pickle
 import subprocess
 from collections import defaultdict
 from pathlib import Path
+from typing import List
 
 import numpy as np
 import pandas as pd
@@ -215,18 +216,18 @@ def error_plots_flexible(df, ax, error_name, label_var, x_var, stat_var=None, co
         error_min = np.min(error, axis=1)
         ax.plot(error.index, error_min, marker="o", linestyle='-', c=color_dict[label], label=label)
 
-    ax.set_xlabel(x_var)
-    ax.set_ylabel(r"$\ell_2$ error") if error_name == L2 else ax.set_ylabel(error_name)
-    ax.legend()
-    ax.set_title("Models behaviour on {}\n".format(x_var))
-    if xlog:
-        ax.set_xscale("log")
-        eps2tick = np.unique(
-            np.round(
-                np.logspace(np.log10(np.min(data[x_var])), np.log10(np.max(data[x_var])), 10),
-                decimals=3))
-        ax.set_xticks(eps2tick)
-        ax.set_xticklabels(eps2tick)
+        ax.set_xlabel(x_var)
+        ax.set_ylabel(r"$\ell_2$ error") if error_name == L2 else ax.set_ylabel(error_name)
+        ax.legend()
+        ax.set_title("Models behaviour on {}\n".format(x_var))
+        if xlog:
+            ax.set_xscale("log")
+            eps2tick = np.unique(
+                np.round(
+                    np.logspace(np.log10(np.min(data[x_var])), np.log10(np.max(data[x_var])), 10),
+                    decimals=3))
+            ax.set_xticks(eps2tick)
+            ax.set_xticklabels(eps2tick)
 
     if ylog:
         ax.set_yscale("log")
@@ -234,8 +235,11 @@ def error_plots_flexible(df, ax, error_name, label_var, x_var, stat_var=None, co
 
 
 # prediction plots
-def prediction_plot(df, predictions, true_solutions, ax, error_name, n_train, float_precision, sampler, epsilon):
+def prediction_plot(df, predictions, true_solutions, ax, error_name, n_train, float_precision, sampler, epsilon,
+                    model_names: List[str] = None):
     df_metadata2plot = df[df.n_train == n_train].reset_index(drop=True)
+    model_names = pd.unique(df_metadata2plot.model_name) if model_names is None else model_names
+    df_metadata2plot = df_metadata2plot[df_metadata2plot.model_name.isin(model_names)]
     df_metadata2plot = df_metadata2plot.loc[
                        (df_metadata2plot.n_train == n_train) & (df_metadata2plot.float_precision == float_precision) & (
                                df_metadata2plot.sampler == sampler) & (df_metadata2plot.epsilon == epsilon), :]
