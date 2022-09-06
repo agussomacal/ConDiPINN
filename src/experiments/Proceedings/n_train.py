@@ -26,7 +26,7 @@ experiment_path.mkdir(parents=True, exist_ok=True)
 
 # ----------------------- Iteration params ----------------------- #
 # cartesian product of variables to use:
-n_train = [10, 100, 1000, 10000]  # 10000 only add bigger numbers if running locally otherwise takes too
+n_train = [10, 100, 1000]  # 10000 only add bigger numbers if running locally otherwise takes too
 # n_train = [10000]  # 10000 only add bigger numbers if running locally otherwise takes too
 
 # much memory around a Gb with 10000 and 10 repetitions.
