@@ -8,7 +8,7 @@ from lib.IntelligentModels.BaseModelFlow import BaseModelFlow
 
 class NNFlow(BaseModelFlow):
     def __init__(self, hidden_layers: Tuple, num_linear_blocks=0, limit_zero=False, random_seed=None,
-                 float_precision=tf.float64):
+                 float_precision=tf.float64, activation="tanh"):
         super().__init__(
             name="Flow_NN_{}{}".format(
                 "_".join(list(map(str, hidden_layers))),
@@ -21,6 +21,7 @@ class NNFlow(BaseModelFlow):
         self.num_linear_blocks = num_linear_blocks
         self.layers = None
         self.limit_zero = limit_zero
+        self.activation = getattr(tf, activation)
 
         self.weights = []
         self.biases = []
@@ -56,7 +57,7 @@ class NNFlow(BaseModelFlow):
             H = tf.add(tf.matmul(H, W), b)
             if ((self.num_linear_blocks > 0 and l % self.num_linear_blocks == self.num_linear_blocks - 1) or
                 self.num_linear_blocks == 0) and (l < len(self.layers) - 2):
-                H = tf.tanh(H)
+                H = self.activation(H)
         # H = tf.log(tf.exp(H+2) + 1)
         # H = tf.exp(H)
         # H = 1 - tf.exp(1 - H)

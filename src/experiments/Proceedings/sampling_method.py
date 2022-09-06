@@ -1,3 +1,7 @@
+"""
+To run place the terminal in experiments and run: python Proceedings/sampling_method.py
+"""
+
 import os.path
 from pathlib import Path
 

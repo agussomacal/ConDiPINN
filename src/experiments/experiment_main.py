@@ -12,6 +12,7 @@ import os.path
 import pickle
 import subprocess
 from collections import defaultdict
+from functools import partial
 from pathlib import Path
 from typing import List
 
@@ -85,6 +86,16 @@ def get_data_path(experiment_name):
     return experiment_data_path
 
 
+def par_func(args, experiment_data_path, k, alpha, r_weight_proportion, test_factor):
+    return subprocess.call(
+        ["python",
+         "experiment_parallel_sequential.py",
+         ] + [str(experiment_data_path)] + list(map(str, args)) + [str(k), str(alpha), str(r_weight_proportion),
+                                                                   str(test_factor)],
+        shell=False,
+    )
+
+
 def do_computations(experiment_name, model_names, epsilons2try, repetitions, n_train, samplers, float_precisions, k,
                     alpha, recalculate=False, number_of_cores=5, test_factor=10, r_weight_proportion=0.5):
     # https://alexandra-zaharia.github.io/posts/run-python-script-as-subprocess-with-multiprocessing/
@@ -104,18 +115,11 @@ def do_computations(experiment_name, model_names, epsilons2try, repetitions, n_t
     print("\n\n\n\n\n\n", "All the calculations are: ", len(parameters2calculate), "\n\n\n\n\n\n")
 
     # ----------------------- parallelize ----------------------- #
-    def par_func(args):
-        return subprocess.call(
-            ["python",
-             "experiment_parallel_sequential.py",
-             ] + [str(experiment_data_path)] + list(map(str, args)) + [str(k), str(alpha), str(r_weight_proportion),
-                                                                       str(test_factor)],
-            shell=False,
-        )
-
-    map_func = Pool(number_of_cores).map if number_of_cores > 1 else map
+    map_func = Pool(number_of_cores).imap_unordered if number_of_cores > 1 else map
     os.chdir(experiments_path)  # put path in experiments folder
-    for res in map_func(par_func, parameters2calculate):
+    for res in map_func(partial(par_func, experiment_data_path=experiment_data_path, k=k, alpha=alpha,
+                                r_weight_proportion=r_weight_proportion, test_factor=test_factor),
+                        parameters2calculate):
         pass
 
 

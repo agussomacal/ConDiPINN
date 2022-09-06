@@ -16,7 +16,7 @@ np.random.seed(42)
 
 k = 1
 alpha = 0.001
-EPSILON = 10
+EPSILON = 0.05
 potential = PlusX()
 
 n_train_r = 100

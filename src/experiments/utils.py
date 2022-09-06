@@ -183,7 +183,7 @@ def plot_predictions(ax, coords2predict, exact_solution_function, u_predictions_
     ax.set_xlabel("x")
     ax.set_ylabel("u")
     ax.legend()
-    delta = (np.nanmax(u_true) - np.nanmin(u_true)) * 0.2
+    # delta = (np.nanmax(u_true) - np.nanmin(u_true)) * 0.2
     # ax.set_ylim((np.nanmin(u_true)-delta, np.nanmax(u_true)+delta))
     ax.grid(True)
 

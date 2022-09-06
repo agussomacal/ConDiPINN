@@ -1,3 +1,7 @@
+"""
+To run place the terminal in experiments and run: python Proceedings/float_precision.py
+"""
+
 import os.path
 from pathlib import Path
 
