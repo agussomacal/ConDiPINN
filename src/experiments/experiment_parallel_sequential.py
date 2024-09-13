@@ -17,7 +17,6 @@ from experiments.Models.RescalingVariationalPinn import RescalingVariationalPinn
 from experiments.Models.VanillaCurriculumLearning import VanillaCurriculumPinn
 from experiments.Models.VanillaPinn import VanillaPinn
 from experiments.Models.VariationalPinn import VariationalPinn
-from experiments.Models.VariationalPinnExactSampler import VariationalPinnExactSampler
 from experiments.Models.VariationalPinn_minimim_on_u import VariationalPinnMinOnU
 from experiments.utils import g, n, PlusX, get_prediction_domain
 from lib.IntelligentModels.NNFlow import NNFlow
@@ -70,7 +69,6 @@ if __name__ == "__main__":
         "CVPinn": CVPinn,
         "VariationalPinn": VariationalPinn,
         "VariationalPinnExpTrue": NamedPartial(VariationalPinn, exp_integration=True),
-        "VariationalPinnExactSampler": VariationalPinnExactSampler,
         "VariationalPinnMinOnU": VariationalPinnMinOnU,
         "VariationalRescaling": RescalingVariationalPinn
     }[experiment_name]

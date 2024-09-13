@@ -21,32 +21,39 @@ by using different variations of Physics-Informed Neural Networks (PINN) togethe
 
 Three sets of experiments can be found in the scripts and in the jupyter-notebook:
 
-* Varying number of training examples (10, 100, 1000): src/*Proceedings/n_train.py*
-* Varying the sampling method (linspace, random): *src/Proceedings/sampling_method.py*
-* Varying the machine precision (16, 32, 64): *src/Proceedings/float_precision.py*
+* Varying number of training examples (10, 100, 1000): `src/experiments/Proceedings/n_train.py`
+* Varying the sampling method (linspace, random): `src/experiments/Proceedings/sampling_method.py`
+* Varying the machine precision (16, 32, 64): `src/experiments/Proceedings/float_precision.py`
 
-If using binder, the jupyter-notebook will automatically load the experiments and the widgets will allow the user to choose different combinations of parameters to analyze with more flexibility the results of the paper. If other combinations would like to be explored, the above mentioned scripts should be modified.
+If using binder, the jupyter-notebook will automatically load the experiments and the widgets will allow the user to choose different combinations of parameters to analyze with more flexibility the results of the paper. If other combinations would like to be explored, the above-mentioned scripts should be modified.
 
 ### Setup for developers
 
-Create virtual enviroment. python 3.6 is needed to be able to run tensorflow 1.13.1
-```
-python3.6 -m venv venv
-```
+We need to use python 3.6 as it is the last version where tensorflow 1.13.1 is supported. 
+To create a virtual environment with these requirements we suggest the following alternatives
+* with conda run in the terminal `conda create -n venv python=3.6`
+* with virtualenv run in the terminal `virtualenv -p python3.6 venv`
+* if python3.6 already in system run in the terminal `python3.6 -m venv venv`
 
-Activate virtual enviroment
+To activate the virtual environment
 ```
-. .venv/bin/activate
+. venv/bin/activate
 ```
 Install libraries 
 ```
 pip install -r requirements.txt 
 ```
-Add the repository scripts path to the environment python path so it can call and import them correctly. For that, once the environment is created create a file with extension **.pth** in the virtual environment directory **env/lib/python3.6/site-packages/**, for example create the file **env/lib/python3.6/site-packages/path2self_packages.pth** and write in it two lines that tell python which are the paths to the project and the src folder, ex:
+Add the repository scripts path to the environment python path so it can call and 
+import them correctly. For that, once the environment is created, create a file with 
+extension `.pth` in the virtual environment directory 
+`env/lib/python3.6/site-packages/`, for example create the file 
+`env/lib/python3.6/site-packages/path2self_packages.pth` and 
+write in it two lines that tell python which are the paths to the project and 
+the src folder, ex:
 
 ```
-/home/user/Repositories/condipinn
-/home/user/Repositories/condipinn/src
+/your/path/to/cloned/repo/condipinn
+/your/path/to/cloned/repo/condipinn/src
 ```
 
 # Run experiments
