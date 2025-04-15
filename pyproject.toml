@@ -1,0 +1,29 @@
+[project]
+name = "ConDiPINN"
+version = "0.1.0"
+description = "ConDiPINN."
+readme = "README.md"
+requires-python = "==3.6"
+dependencies = [
+    "tensorflow==1.13.1",
+    "numpy",
+    "scipy",
+    "matplotlib",
+    "pandas",
+    "seaborn",
+    "tqdm"
+]
+
+[tool.ruff.lint]
+ignore = ["F722", "F821"]
+
+[dependency-groups]
+dev = [
+    "ipykernel",
+    "ipywidgets",
+    "notebook",
+]
+
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
